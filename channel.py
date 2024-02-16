@@ -5,6 +5,9 @@ from flask import Flask, request, render_template, jsonify
 import json
 import requests
 
+import datetime
+import random
+
 # Class-based application configuration
 class ConfigClass(object):
     """ Flask application config """
@@ -20,9 +23,14 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '0987654321'
-CHANNEL_NAME = "The One and Only Channel"
+CHANNEL_NAME = "The Guessing Channel"
 CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file
-CHANNEL_FILE = 'messages.json'
+CHANNEL_FILE = 'data/messages.json'
+
+CURRENT_NUMBER = -1
+LOWER_BOUND = 1
+UPPER_BOUND = 100
+NUMBER_GUESSES = 0
 
 @app.cli.command('register')
 def register_command():
@@ -84,6 +92,7 @@ def send_message():
     # add message to messages
     messages = read_messages()
     messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp']})
+    messages.append(guess_reply(message['content']))
     save_messages(messages)
     return "OK", 200
 
@@ -104,6 +113,30 @@ def save_messages(messages):
     global CHANNEL_FILE
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
+
+def guess_reply(input):
+    global CURRENT_NUMBER, LOWER_BOUND, UPPER_BOUND, NUMBER_GUESSES
+    if CURRENT_NUMBER < 0:
+        answer = f"I'm thinking of a random number between {LOWER_BOUND} and {UPPER_BOUND}!"
+        CURRENT_NUMBER = random.randint(LOWER_BOUND, UPPER_BOUND)
+    else:
+        try:
+            input_number = int(input)
+            NUMBER_GUESSES += 1
+            if input_number == CURRENT_NUMBER:
+                answer = f"You guessed the correct number {input_number} in {NUMBER_GUESSES} guesses!"
+                CURRENT_NUMBER = -1
+                NUMBER_GUESSES = 0
+            elif input_number < CURRENT_NUMBER:
+                answer = f"The number I am thinking of is bigger than {input_number}..."
+            elif input_number > CURRENT_NUMBER:
+                answer = f"The number I am thinking of is smaller than {input_number}..."
+            else:
+                answer = f"Something went wrong! :("
+        except:
+            answer = f"Please enter a integer between {LOWER_BOUND} and {UPPER_BOUND}."
+        
+    return {'content':answer, 'sender':"GuessBot", 'timestamp': datetime.datetime.now().isoformat()}
 
 # Start development web server
 if __name__ == '__main__':
