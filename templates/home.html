@@ -2,17 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/8362/8362758.png" type="image/x-icon">
     <title>List of channels</title>
+
+    <style>
+        
+        /* Remove underline of channel names */
+        .card-link {
+                text-decoration: none; /* Remove underline */
+                color: inherit; /* Inherit text color */
+        }
+
+        .card {
+        /* Add shadows to create the "card" effect */
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            transition: 0.2s;
+            border-radius: 5px;
+        }
+
+        /* On mouse-over, add a deeper shadow */
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Add some padding inside the card container */
+        .container {
+            padding: 2px 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 32% 32% 32%;
+            column-gap: 2%;
+        }
+
+    </style>
 </head>
-<body>
+<body style="background-color: #fff2de;">
+    <a href="{{ url_for('home_page') }}">
+        <img src="https://cdn-icons-png.flaticon.com/128/2163/2163350.png" width="45vw" height="45vw">
+    </a>
+<div>
+    <div style="text-align:center; background-color: #fde4c3;">
+        <hr>
+        <h1>List of message channels</h1>
+        <hr>
+    </div>
+    <div class="grid">
+        {% for channel in channels %}
+            <a href="{{ url_for('show_channel') }}?channel={{ channel.endpoint | urlencode }}" class="card-link">
+                <div class="card">
+                    <!-- fix that every channel has its own image -->
+                    <!-- add individual card image or default image -->
+                    <img src={{ image or "https://media.allure.com/photos/5eceb96f3caffa000879914d/16:9/w_2560%2Cc_limit/moon.jpg" }} alt="{{ channel.name }} Image" width="100%" style="border-radius: 5px 5px 0 0;">
+                    <div class="container">
+                        {{ channel.name }}
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
 
-<h1>List of message channels</h1>
+</div>
 
-<ul>
-    {% for channel in channels %}
-        <li><a href="{{ url_for('show_channel') }}?channel={{ channel.endpoint | urlencode }}">{{ channel.name }}</a></li>
-    {% endfor %}
-</ul>
 
 </body>
 </html>

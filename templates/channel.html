@@ -2,27 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Channel {{ channel.name }}</title>
-</head>
-<body>
-<p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
-{% if channel %}
-    <h1>Channel {{ channel.name }}</h1>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/8362/8362758.png" type="image/x-icon">
+    <title>Channel: {{ channel.name }}</title>
 
-        {% for message in messages %}
-            <h2>{{ message.sender }}</h2>
-            <p>{{ message.content }}</p>
-            <p style="font-size: 60%">{{ message.timestamp }}</p>
-        {% endfor %}
+    <style>
+
+        .center {
+            text-align: center;
+        }
+
+        .grid_messages {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            /* overflow: auto; */
+        }
+
+        .message {
+            background-color: #dada3b; 
+            display: inline-block; /* fits containver to content size */
+            border-radius: 5px;
+            padding-left: 20px;
+            padding-right: 20px;
+            margin-bottom: 5px;
+        }    
+
+        .message:nth-child(odd) {
+            align-self: flex-end;
+            background-color: #9dbc29; 
+        }
+
+        .message:nth-child(even) {
+            align-self: flex-start;
+        }
+
+        .buffer {
+            width: 100%;
+        }
+
+        #user {
+            float: right;
+            justify-content: end;
+        }
+
+        p {
+            margin: 5px;
+        }
+
+        .search {
+            width: 25%;
+            margin: 1px;
+            background-color: #ffdd54;
+        }
+
+        #border {
+            border: 1px solid black; /* Entfernt die Standard-Border des Buttons */
+            border-radius: 3px; /* Runde die Ecken des Buttons ab */
+        }
+
+    </style>
+</head>
+<body style="background-color: #fff2de;">
+<a href="{{ url_for('home_page') }}">
+    <img src="https://cdn-icons-png.flaticon.com/128/2163/2163350.png" width="45vw" height="45vw">
+</a>
+
+{% if channel %}
+    <div style="background-color: #fde4c3;">
+        <hr>
+        <h1 class="center">Channel: {{ channel.name }}</h1>
+        <h3 class="center">Greet me and we can start!</h3>
+        <hr>
+    </div>
+        <div class="grid_messages">
+            {% for message in messages %}
+                <div class="message" >
+                    <!-- not using h1 here bc then we would also have to change margin for h1-->
+                    <p style="font-size: 25px;"><strong>{{ message.sender }}</strong></p>
+                    <p>{{ message.content }}</p>
+                    <p style="font-size: 60%">{{ message.timestamp }}</p>
+                </div>
+            {% endfor %}    
+        </div>
 {% else %}
     <h1>Channel not found</h1>
 {% endif %}
 
-<form action="post" method="post">
+<hr>
+<form action="post" method="post" style="text-align: right;">
     <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
-    Sender: <input type="text" name="sender" id="sender"> <br>
-    Message: <input type="text" name="content" id="content"> <br>
-    <input type="submit" value="Post">
+        <input type="text" name="sender" id="border" class="search" placeholder="Sender..."> <br>
+        <input type="submit" value="Post" id="border" style="background-color: #ffb454;"">
+        <input type="text" name="content" id="border" class="search" placeholder="Message...">
+
 </form>
 
 </body>
