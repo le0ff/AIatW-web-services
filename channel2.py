@@ -23,9 +23,9 @@ HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '22334455'
 CHANNEL_NAME = "Eliza's Mensa"
-CHANNEL_IMG = "https://static.boredpanda.com/blog/wp-content/uploads/2016/02/20-Photos-that-show-India-like-youve-never-seen-before35__880.jpg"
 CHANNEL_ENDPOINT = "http://localhost:5002"
 CHANNEL_FILE = 'data/messages2.json'
+#CHANNEL_IMG = "https://static.boredpanda.com/blog/wp-content/uploads/2016/02/20-Photos-that-show-India-like-youve-never-seen-before35__880.jpg"
 
 @app.cli.command('register')
 def register_command():
@@ -54,10 +54,10 @@ def check_authorization(request):
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    global CHANNEL_NAME, CHANNEL_IMG
+    global CHANNEL_NAME
     if not check_authorization(request):
         return "Invalid authorization", 400
-    return jsonify({'name':CHANNEL_NAME, 'image':CHANNEL_IMG}), 200
+    return jsonify({'name':CHANNEL_NAME}), 200
 
 # GET: Return list of messages
 @app.route('/', methods=['GET'])
@@ -84,9 +84,11 @@ def send_message():
         return "No sender", 400
     if not 'timestamp' in message:
         return "No timestamp", 400
-    # add message to messages
+    # read messages
     messages = read_messages()
+    # add input message to messages
     messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp']})
+    # add bot message to messages
     messages.append({'content':eliza_reply(message['content']), 'sender':"MensaBot", 'timestamp': datetime.datetime.now().isoformat()})
     save_messages(messages)
     return "OK", 200
@@ -109,26 +111,27 @@ def save_messages(messages):
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
 
-# List of possible responses
+# dictionary of possible situations and their responses
 responses = {
-    "greeting": ["Hello! Have you been in the Mensa today?", "Hi there! How was your meal at the Mensa?"],
-    "meal": ["What did you eat in the Mensa today?", "How was the food at the Mensa today?"],
-    "positive_feedback": ["That sounds delicious!", "Glad to hear you enjoyed your meal!"],
-    "negative_feedback": ["Oh, that's unfortunate. Hopefully, it'll be better next time.", "Sorry to hear that. Did you try something else?"],
-    "farewell": ["Have a great day!", "See you later!"],
-    "default": ["Interesting, tell me more.", "I see.", "Could you elaborate on that?"],
+    "greeting": ["Hello! Have you been in the Mensa today?", "Hi there! How was your meal at the Mensa?", "Greetings! Any exciting dishes at the Mensa today?"],
+    "meal": ["What did you eat in the Mensa today?", "How was the food at the Mensa today?", "Any special dish catch your eye in the Mensa menu?"],
+    "positive_feedback": ["That sounds delicious!", "Glad to hear you enjoyed your meal!", "Your taste buds must be celebrating!", "Yum! It sounds like you had a culinary adventure."],
+    "negative_feedback": ["Oh, that's unfortunate. Hopefully, it'll be better next time.", "Sorry to hear that. Did you try something else?", "Sometimes meals can be hit or miss. Anything specific you didn't like?", "Not every meal can be a winner. Any ideas on how it could be improved?"],
+    "farewell": ["Have a great day!", "See you later!", "Wishing you a fantastic day ahead!"],
+    "default": ["Interesting, tell me more.", "I see.", "Could you elaborate on that?", "Fascinating! Anything else on your mind?", "I'm intrigued! Share more of your thoughts."],
     "ask_about_location": ["Which Mensa did you visit?", "Is the Mensa you went to crowded?"],
-    "ask_about_cost": ["How much did your meal cost?", "Is the food in the Mensa affordable?"],
-    "ask_about_quality": ["How would you rate the quality of the food?", "Was the food fresh?"],
-    "ask_about_menu_options": ["What menu options were available?", "Did you have any vegetarian options?"],
-    "compliment_location": ["That's a great choice!", "I've heard good things about that Mensa."],
-    "compliment_cost": ["It's good to hear that it's affordable.", "Sounds like a good deal!"],
-    "compliment_quality": ["Glad to hear the food was fresh!", "Quality is important, glad you enjoyed it."],
-    "compliment_menu_options": ["Sounds like they have a good variety!", "Nice to have options to choose from."],
+    "ask_about_cost": ["How much did your meal cost?", "Is the food in the Mensa affordable?", "Getting value for money is always a plus. How about the portion size?", "Affordability is key! Did the cost match the quality of the meal?"],
+    "ask_about_quality": ["How would you rate the quality of the food?", "Was the food fresh?", "Quality matters! Did the flavors meet your expectations?", "Freshness is crucial. Any specific aspect of the meal that stood out in terms of quality?"],
+    "ask_about_menu_options": ["What menu options were available?", "Did you have any vegetarian options?", "Exploring the variety is always exciting. Any new items on the menu?", "Variety is the spice of life! Any surprises or new additions to the menu that caught your attention?"],
+    "compliment_location": ["That's a great choice!", "I've heard good things about that Mensa.", "Choosing a good Mensa is an art! Well done.", "Excellent taste! Is there something special about the location that you appreciate?"],
+    "compliment_cost": ["It's good to hear that it's affordable.", "Sounds like a good deal!", "Affordable and tasty, a winning combination!", "A budget-friendly delight! Any tips for those looking for a good deal?"],
+    "compliment_quality": ["Glad to hear the food was fresh!", "Quality is important, glad you enjoyed it.", "Freshness makes all the difference! Anything stood out in terms of flavors?", "Quality triumphs! Any particular dish that showcased the culinary expertise?"],
+    "compliment_menu_options": ["Sounds like they have a good variety!", "Nice to have options to choose from.", "Variety is the spice of life! Any particular dish that impressed you?", "A diverse menu is always a treat! Any recommendations from the extensive options?"],
 }
 
+# eliza reply function
 def eliza_reply(input):
-
+    #sketchy if-elif-else statement that simply looks for the below keywords to choose random answer fitting to the situation
     input = input.lower()
     if any(word in input for word in ["hello", "hi", "hey", "howdy", "greetings"]):
         return random.choice(responses["greeting"])

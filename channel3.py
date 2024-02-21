@@ -4,9 +4,7 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
-
 import datetime
-import random
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -24,10 +22,11 @@ HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '11223344'
 CHANNEL_NAME = "The Mocking Channel"
-CHANNEL_IMG = "https://media.blogto.com/articles/201731-sunrise-ed.jpg?w=2048&cmd=resize_then_crop&height=1365&quality=70"
 CHANNEL_ENDPOINT = "http://localhost:5003" # don't forget to adjust in the bottom of the file
 CHANNEL_FILE = 'data/messages3.json'
+#CHANNEL_IMG = "https://media.blogto.com/articles/201731-sunrise-ed.jpg?w=2048&cmd=resize_then_crop&height=1365&quality=70"
 
+#numbers lists
 SUPERSCRIPT_NUMBERS = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"]
 NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
@@ -58,11 +57,10 @@ def check_authorization(request):
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    global CHANNEL_NAME, CHANNEL_IMG
-    #image = CHANNEL_IMG
+    global CHANNEL_NAME
     if not check_authorization(request):
         return "Invalid authorization", 400
-    return jsonify({'name':CHANNEL_NAME, 'image':CHANNEL_IMG}), 200
+    return jsonify({'name':CHANNEL_NAME}), 200
 
 # GET: Return list of messages
 @app.route('/', methods=['GET'])
@@ -89,9 +87,11 @@ def send_message():
         return "No sender", 400
     if not 'timestamp' in message:
         return "No timestamp", 400
-    # add message to messages
+    # read messages
     messages = read_messages()
+    # add input message to messages
     messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp']})
+    # add bot message to messages
     messages.append({'content':mockify(message['content']), 'sender':mockify(message['sender']), 'timestamp': mockify(datetime.datetime.now().isoformat())})
     save_messages(messages)
     return "OK", 200
@@ -114,15 +114,14 @@ def save_messages(messages):
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
 
-@app.context_processor
-def get_image():
-    global CHANNEL_IMG
-    return dict(image=CHANNEL_IMG)
-
+#mockify method to simply change input-letters to alternating lower- and upper-cases and input-numbers to superscript and regular
 def mockify(input):
     global SUPERSCRIPT_NUMBERS, NUMBERS
     answer = ''
+    #input to lower-case
     input = input.lower()
+
+    #iterate over input to change every 2nd occurence to upper-case or superscript number
     for i in range(len(input)):     
         if i % 2 == 0: 
             answer += str(input[i])
@@ -131,6 +130,7 @@ def mockify(input):
                 answer += SUPERSCRIPT_NUMBERS[int(input[i])]
             else:
                 answer += str(input[i].upper())
+    #return the mockified input
     return answer
 
 # Start development web server

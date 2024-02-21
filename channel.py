@@ -23,10 +23,11 @@ HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '0987654321'
 CHANNEL_NAME = "The Guessing Game"
-CHANNEL_IMG = "https://media.blogto.com/articles/201731-sunrise-ed.jpg?w=2048&cmd=resize_then_crop&height=1365&quality=70"
 CHANNEL_ENDPOINT = "http://localhost:5001" # don't forget to adjust in the bottom of the file
 CHANNEL_FILE = 'data/messages.json'
+#CHANNEL_IMG = "https://media.blogto.com/articles/201731-sunrise-ed.jpg?w=2048&cmd=resize_then_crop&height=1365&quality=70"
 
+# variables for number-guessing
 CURRENT_NUMBER = -1
 LOWER_BOUND = 1
 UPPER_BOUND = 100
@@ -59,11 +60,10 @@ def check_authorization(request):
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    global CHANNEL_NAME, CHANNEL_IMG
-    #image = CHANNEL_IMG
+    global CHANNEL_NAME
     if not check_authorization(request):
         return "Invalid authorization", 400
-    return jsonify({'name':CHANNEL_NAME, 'image':CHANNEL_IMG}), 200
+    return jsonify({'name':CHANNEL_NAME}), 200
 
 # GET: Return list of messages
 @app.route('/', methods=['GET'])
@@ -90,9 +90,12 @@ def send_message():
         return "No sender", 400
     if not 'timestamp' in message:
         return "No timestamp", 400
-    # add message to messages
+    
+    #read messages
     messages = read_messages()
+    # add input message to messages
     messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp']})
+    # add bot-message to messages
     messages.append(guess_reply(message['content']))
     save_messages(messages)
     return "OK", 200
@@ -115,20 +118,20 @@ def save_messages(messages):
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
 
-@app.context_processor
-def get_image():
-    global CHANNEL_IMG
-    return dict(image=CHANNEL_IMG)
-
+# guess-reply
 def guess_reply(input):
     global CURRENT_NUMBER, LOWER_BOUND, UPPER_BOUND, NUMBER_GUESSES
+    #initialize random number
     if CURRENT_NUMBER < 0:
         answer = f"I'm thinking of a random number between {LOWER_BOUND} and {UPPER_BOUND}!"
         CURRENT_NUMBER = random.randint(LOWER_BOUND, UPPER_BOUND)
     else:
+        #try to convert input to integer
         try:
             input_number = int(input)
             NUMBER_GUESSES += 1
+
+            #number comparison
             if input_number == CURRENT_NUMBER:
                 answer = f"You guessed the correct number {input_number} in {NUMBER_GUESSES} guesses! Text me, if you want to play again."
                 CURRENT_NUMBER = -1
@@ -137,11 +140,14 @@ def guess_reply(input):
                 answer = f"The number I am thinking of is bigger than {input_number}..."
             elif input_number > CURRENT_NUMBER:
                 answer = f"The number I am thinking of is smaller than {input_number}..."
+            #error-message
             else:
                 answer = f"Something went wrong! :("
+        #except
         except:
             answer = f"Please enter a integer between {LOWER_BOUND} and {UPPER_BOUND}."
-        
+    
+    #return answer with sender "GuessBot" and current timestamp
     return {'content':answer, 'sender':"GuessBot", 'timestamp': datetime.datetime.now().isoformat()}
 
 # Start development web server

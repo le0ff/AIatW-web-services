@@ -15,7 +15,6 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            /* overflow: auto; */
         }
 
         .message {
@@ -27,11 +26,13 @@
             margin-bottom: 5px;
         }    
 
+        /* odd children of the message container will be displayed on the right*/
         .message:nth-child(odd) {
             align-self: flex-end;
             background-color: #9dbc29; 
         }
 
+        /* even children of the message container will be displayed on the left*/
         .message:nth-child(even) {
             align-self: flex-start;
         }
@@ -56,8 +57,8 @@
         }
 
         #border {
-            border: 1px solid black; /* Entfernt die Standard-Border des Buttons */
-            border-radius: 3px; /* Runde die Ecken des Buttons ab */
+            border: 1px solid black; 
+            border-radius: 3px; 
         }
 
     </style>

@@ -30,6 +30,7 @@
             padding: 2px 16px;
         }
 
+        /* Grid to display 3 cards (channels) in one row*/
         .grid {
             display: grid;
             grid-template-columns: 32% 32% 32%;
@@ -53,8 +54,7 @@
             <a href="{{ url_for('show_channel') }}?channel={{ channel.endpoint | urlencode }}" class="card-link">
                 <div class="card">
                     <!-- fix that every channel has its own image -->
-                    <!-- add individual card image or default image -->
-                    <img src={{ image or "https://media.allure.com/photos/5eceb96f3caffa000879914d/16:9/w_2560%2Cc_limit/moon.jpg" }} alt="{{ channel.name }} Image" width="100%" style="border-radius: 5px 5px 0 0;">
+                    <img src="{{ url_for('static', filename='./default_image.png')}}" alt="{{ channel.name }} Image" width="100%" style="border-radius: 5px 5px 0 0;">
                     <div class="container">
                         {{ channel.name }}
                     </div>
